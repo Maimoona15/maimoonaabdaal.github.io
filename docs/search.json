@@ -1,5 +1,19 @@
 [
   {
+    "objectID": "index.html",
+    "href": "index.html",
+    "title": "STAT-244",
+    "section": "",
+    "text": "This is a Quarto website\nHi I’m Maimoona yay\n\n1 + 1 \n\n[1] 2"
+  },
+  {
+    "objectID": "about.html",
+    "href": "about.html",
+    "title": "about",
+    "section": "",
+    "text": "This is my website! I am a sophomore majoring in Psychology & Statistics at Mount Holyoke College :)"
+  },
+  {
     "objectID": "maimoonaabdaal.github.io.html",
     "href": "maimoonaabdaal.github.io.html",
     "title": "Welcome to my homepage!",
@@ -12,19 +26,5 @@
     "title": "Welcome to my homepage!",
     "section": "",
     "text": "Quarto enables you to weave together content and executable code into a finished document. To learn more about Quarto see https://quarto.org.\n\n1 + 1\n\n[1] 2"
-  },
-  {
-    "objectID": "about.html",
-    "href": "about.html",
-    "title": "about",
-    "section": "",
-    "text": "This is my website! I am a sophomore majoring in Psychology & Statistics at Mount Holyoke College :)"
-  },
-  {
-    "objectID": "index.html",
-    "href": "index.html",
-    "title": "STAT-244",
-    "section": "",
-    "text": "This is a Quarto website\n\n1 + 1 \n\n[1] 2"
   }
 ]

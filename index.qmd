@@ -4,6 +4,8 @@ title: "STAT-244"
 
 This is a Quarto website
 
+Hi I'm Maimoona yay
+
 ```{r}
 1 + 1 
 ```
