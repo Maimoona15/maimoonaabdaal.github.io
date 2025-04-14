@@ -1,0 +1,10 @@
+---
+title: "STAT-244"
+---
+
+This is a Quarto website
+
+```{r}
+1 + 1 
+```
+
