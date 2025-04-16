@@ -1,5 +1,5 @@
 ---
-title: "about"
+title: "About"
 ---
 
 This is my website! I am a sophomore majoring in Psychology & Statistics at Mount Holyoke College :)
