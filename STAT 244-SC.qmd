@@ -40,4 +40,4 @@ cancer_model + geom_smooth(method = "lm", se = FALSE, formula = y ~ poly(x, 2))
 # Model_3: 10 predictors (Y = b0 + b1 X + b2 X^2 + ... + b10 X^10)
 cancer_model + geom_smooth(method = "lm", se = FALSE, formula = y ~ poly(x, 10))
 ```
-The models above demonstrate that the more predictors are added, the more the models become overfit to the noise in our data. The models then lose their ability to generalize to new data.
+The models above demonstrate that the more predictors are added, the more the models become overfit to the noise in our data. The models then lose their ability to generalize to new data, necessitating cross-validation.
