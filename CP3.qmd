@@ -1,0 +1,336 @@
+---
+title: "CP 3"
+# format: live-html
+# engine: knitr
+format: #revealjs
+    pdf:
+      keep-tex: true
+      include-in-header:
+         text: |
+           \usepackage{fvextra}
+           \DefineVerbatimEnvironment{Highlighting}{Verbatim}{breaklines,commandchars=\\\{\}}
+            \DefineVerbatimEnvironment{OutputCode}{Verbatim}{breaklines,commandchars=\\\{\}}
+    html:
+      self-contained: true
+      grid:
+        margin-width: 200px
+      code-fold: false
+      toc: true
+      # callout-appearance: minimal
+editor: visual
+
+# You can change the color theme of the rendered document 
+theme: default
+---
+
+```{r}
+library(tidyverse)
+library(tidymodels)
+library(readxl)
+breastcancer = read_csv("breastcancer.csv")
+```
+
+Write a brief introduction to cross validation which includes relevant mathematical notation.
+
+Cross-validation is a class of methods that estimate the test error by rate by holding out a subset of the training observations from the fitting process, and then applying the statistical learning method to those held out observations.
+
+$$\text{CV}_{(k)} = \frac{1}{k} \sum_{j=1}^k \text{MAE}_j$$
+
+What is the goal of cross-validation? (Hint: Think about over-fitting, along with social/ethical considerations)
+
+The goal of cross-validation is to test the model's ability to predict new data that was not used in estimating it, in order to flag problems like overfitting or selection bias and to give insight into how the model will generalize to an independent data set. Overﬁtting occurs when a model reads too much into chance features and essentially memorizes features of the data used to build it, thus reducing reliability and the ability to generalize to underrepresented populations.
+
+What linear models are you considering based on your research question? Pick at least two models to compare.
+
+For example, in Lab 7, we first considered the following model for black cherry trees:
+
+E\[height \| diameter\] = β0+ β1(diameter)
+
+Explain how you divided your data into its test set and training set.
+
+```{r}
+breastcancer %>% 
+  select(perimeter_mean, texture_mean, smoothness_mean, concavity_mean, diagnosis)
+```
+
+```{r}
+cancer_plot <- ggplot(breastcancer, aes(x = concavity_mean, y = perimeter_mean)) + geom_point()
+
+cancer_plot
+```
+
+```{r}
+cancer_plot + geom_smooth(method = "lm", se = FALSE)
+```
+
+```{r}
+# Model_2: 2 predictors (Y = b0 + b1 X + b2 X^2)
+cancer_plot + geom_smooth(method = "lm", se = FALSE, formula = y ~ poly(x, 2))
+```
+
+```{r}
+# Model_3: 10 predictors (Y = b0 + b1 X + b2 X^2 + ... + b10 X^10)
+cancer_plot + geom_smooth(method = "lm", se = FALSE, formula = y ~ poly(x, 10))
+```
+
+```{r}
+# Set the random number seed
+set.seed(8)
+
+# Split the cars data into 80% / 20%
+# Ensure that the sub-samples are similar with respect to mpg
+cancer_split = initial_split(breastcancer, strata = perimeter_mean, prop = .8)
+```
+
+```{r}
+# Get the training data from the split
+cancer_train = training(cancer_split)
+
+# Get the testing data from the split
+cancer_test = testing(cancer_split)
+```
+
+```{r}
+nrow(breastcancer)
+nrow(cancer_train)
+nrow(cancer_test)
+```
+
+```{r}
+lm_spec <- linear_reg() %>% set_mode('regression') %>% set_engine('lm')
+```
+
+```{r}
+# Step 2: Model estimation
+cancer_model <- lm_spec %>% 
+  fit(perimeter_mean ~ concavity_mean, data = breastcancer)
+```
+
+```{r}
+model_10_train <- lm_spec %>% 
+  fit(perimeter_mean ~ poly(concavity_mean, 10), data = breastcancer)
+```
+
+```{r}
+# How well does the TRAINING model predict the TRAINING data?
+# Calculate the training (in-sample) MAE
+model_10_train %>% 
+  augment(new_data = cancer_train) %>% 
+  mae(truth = perimeter_mean, estimate = .pred)
+
+# How well does the TRAINING model predict the TEST data?
+# Calculate the test MAE
+# YOUR CODE HERE
+model_10_train %>% 
+  augment(new_data = cancer_test) %>% 
+  mae(truth = perimeter_mean, estimate = .pred)
+```
+
+State which error metric you are using (MAE or MSE) and give its formal mathematical definition. Why did you choose this error metric? What are the advantages/disadvantages of using it?
+
+Hint: MAEj (the mean absolute error for the jth fold, which has nj observations in it) is the 1 norm of the error vector e = y -y = (y1,...,ynj) - (y1,..., ynj) divided by the number of observations (nj). See your notes from Vector Norms (Blackboard Lecture). Hint: MSEj (mean square error for jth fold, which has nj observations) is the squared 2-norm of the error vector e = y -y = (y1,...,ynj) - (y1,..., ynj) divided by the number of observations (nj). See your notes from Vector Norms (Blackboard Lecture).
+
+Implement k-fold cross validation for k = 10.
+
+```{r}
+set.seed(244)
+
+cancer_model_cv = lm_spec %>%
+fit_resamples(
+  perimeter_mean ~ concavity_mean, 
+  resamples = vfold_cv(breastcancer, v = 10), 
+  metrics = metric_set(mae, rmse, rsq)
+  )
+```
+
+```{r}
+cancer_model_cv %>% collect_metrics()
+```
+
+```{r}
+cancer_model_cv %>% unnest(.metrics) %>% 
+filter(.metric == "mae")
+```
+
+Based on my random folds above, the prediction error (MAE) was best for fold 10 and worst for fold 5.
+
+```{r}
+# 10-fold cross-validation for model_1
+set.seed(244)
+model_1_cv <- lm_spec %>% 
+  fit_resamples(
+    perimeter_mean ~ texture_mean + concavity_mean + smoothness_mean,
+    resamples = vfold_cv(breastcancer, v = 10), 
+    metrics = metric_set(mae, rsq)
+  )
+```
+
+```{r}
+# 10-fold cross-validation for model_2
+set.seed(253)
+model_2_cv <- lm_spec %>% 
+  fit_resamples(
+    perimeter_mean ~ texture_mean * concavity_mean + smoothness_mean,
+    resamples = vfold_cv(breastcancer, v = 10), 
+    metrics = metric_set(mae, rsq)
+  )
+```
+
+```{r}
+model_1_cv %>% 
+  collect_metrics()
+model_2_cv %>% 
+  collect_metrics()
+```
+
+Display evaluation metrics for your different models in a clean, organized way. This display should include both the estimated CV metric as well as its standard deviation.
+
+```{r}
+# STEP 2: model estimation
+model_1 <- lm_spec %>% 
+  fit(perimeter_mean ~ texture_mean + concavity_mean + smoothness_mean, data = breastcancer)
+
+model_2 <- lm_spec %>% 
+  fit(perimeter_mean ~ texture_mean * concavity_mean + smoothness_mean, data = breastcancer)
+```
+
+```{r}
+# IN-SAMPLE R^2 for model_1 = ???
+model_1 %>% glance()
+
+# IN-SAMPLE R^2 for model_2 = ???
+model_2 %>% glance()
+```
+
+```{r}
+# IN-SAMPLE MAE for model_1 = ???
+model_1 %>% 
+  augment(new_data = breastcancer) %>% 
+  mae(truth = perimeter_mean, estimate = .pred)
+
+# IN-SAMPLE MAE for model_2 = ???
+model_2 %>% 
+  augment(new_data = breastcancer) %>% 
+  mae(truth = perimeter_mean, estimate = .pred)
+```
+
+Try different values of k (the tuning parameter). At minimum, try k = n - 1 (LOOCV), and k = 5. Which value of k has the smallest CV error?
+
+```{r}
+model_1_loocv <- lm_spec %>% 
+  fit_resamples(
+    perimeter_mean ~ texture_mean + concavity_mean + smoothness_mean,
+    resamples = vfold_cv(breastcancer, v = 40), 
+    metrics = metric_set(mae)
+  )
+```
+
+```{r}
+model_1_loocv %>% collect_metrics
+```
+
+```{r}
+# 5-fold cross-validation for model_1
+set.seed(244)
+
+cancer_model_cv = lm_spec %>%
+fit_resamples(
+  perimeter_mean ~ concavity_mean, 
+  resamples = vfold_cv(breastcancer, v = 5), 
+  metrics = metric_set(mae, rmse, rsq)
+  )
+```
+
+```{r}
+cancer_model_cv %>% collect_metrics()
+```
+
+```{r}
+cancer_model_cv %>% unnest(.metrics) %>% 
+filter(.metric == "mae")
+```
+
+Based on my random folds above, the prediction error (MAE) was best for fold 4 and worst for fold 3.
+
+```{r}
+# 5-fold cross-validation for model_1
+set.seed(244)
+model_1_cv <- lm_spec %>% 
+  fit_resamples(
+    perimeter_mean ~ texture_mean + concavity_mean + smoothness_mean,
+    resamples = vfold_cv(breastcancer, v = 5), 
+    metrics = metric_set(mae, rsq)
+  )
+```
+
+```{r}
+# 5-fold cross-validation for model_2
+set.seed(253)
+model_2_cv <- lm_spec %>% 
+  fit_resamples(
+    perimeter_mean ~ texture_mean * concavity_mean + smoothness_mean,
+    resamples = vfold_cv(breastcancer, v = 5), 
+    metrics = metric_set(mae, rsq)
+  )
+```
+
+```{r}
+model_1_cv %>% 
+  collect_metrics()
+model_2_cv %>% 
+  collect_metrics()
+```
+
+```{r}
+# 8-fold cross-validation
+set.seed(244)
+
+cancer_model_cv = lm_spec %>%
+fit_resamples(
+  perimeter_mean ~ concavity_mean, 
+  resamples = vfold_cv(breastcancer, v = 8), 
+  metrics = metric_set(mae, rmse, rsq)
+  )
+```
+
+```{r}
+cancer_model_cv %>% collect_metrics()
+```
+
+```{r}
+cancer_model_cv %>% unnest(.metrics) %>% 
+filter(.metric == "mae")
+```
+
+Based on my random folds above, the prediction error (MAE) was best for fold 2 and worst for fold 1.
+
+```{r}
+# 8-fold cross-validation for model_1
+set.seed(244)
+model_1_cv <- lm_spec %>% 
+  fit_resamples(
+    perimeter_mean ~ texture_mean + concavity_mean + smoothness_mean,
+    resamples = vfold_cv(breastcancer, v = 8), 
+    metrics = metric_set(mae, rsq)
+  )
+```
+
+```{r}
+# 8-fold cross-validation for model_2
+set.seed(244)
+model_2_cv <- lm_spec %>% 
+  fit_resamples(
+    perimeter_mean ~ texture_mean * concavity_mean + smoothness_mean,
+    resamples = vfold_cv(breastcancer, v = 8), 
+    metrics = metric_set(mae, rsq)
+  )
+```
+
+```{r}
+model_1_cv %>% 
+  collect_metrics()
+model_2_cv %>% 
+  collect_metrics()
+```
+
+Select your final model based on which one has the smallest CV error.
