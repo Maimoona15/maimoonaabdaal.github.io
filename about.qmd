@@ -2,7 +2,9 @@
 title: "About"
 ---
 
-Hi, my name is Maimoona and this is my website! I am a sophomore majoring in Psychology & Statistics at Mount Holyoke College :)
+Hi, my name is Maimoona and this is my website! I am a sophomore majoring in Psychology & Statistics at Mount Holyoke College :) 
+
+Here is a link to my LinkedIn, where you can get in touch with me! https://www.linkedin.com/in/maimoona-abdaal-693269318/
 
 ```{r}
 #| label: fig-plot
