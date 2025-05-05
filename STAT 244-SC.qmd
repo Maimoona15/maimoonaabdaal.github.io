@@ -2,4 +2,42 @@
 title: "STAT 244-SC"
 ---
 
-hey
+```{r message=FALSE}
+library(tidyverse)
+library(tidymodels)
+library(readxl)
+breastcancer = read_csv("breastcancer.csv")
+```
+
+The data set has information on the characteristics of various breast masses. Each row corresponds to a breast mass. The features are calculated from the digitized image of a fine needle aspirate (FNA) of the breast mass.
+
+```{r}
+lm_spec <- linear_reg() %>% set_mode('regression') %>% set_engine('lm')
+```
+
+```{r}
+cancer_model<-lm_spec %>% 
+  fit(perimeter_mean ~ concavity_mean, data = breastcancer)
+```
+
+```{r}
+cancer_model <- ggplot(breastcancer, aes(x = concavity_mean, y = perimeter_mean)) + geom_point()
+
+cancer_model
+```
+
+```{r}
+# Model _1: 1 predictor (Y = b0 + b1 X)
+cancer_model + geom_smooth(method = "lm", se = FALSE)
+```
+
+```{r}
+# Model_2: 2 predictors (Y = b0 + b1 X + b2 X^2)
+cancer_model + geom_smooth(method = "lm", se = FALSE, formula = y ~ poly(x, 2))
+```
+
+```{r}
+# Model_3: 10 predictors (Y = b0 + b1 X + b2 X^2 + ... + b10 X^10)
+cancer_model + geom_smooth(method = "lm", se = FALSE, formula = y ~ poly(x, 10))
+```
+The models above demonstrate that the more predictors are added, the more the models become overfit to the noise in our data. The models then lose their ability to generalize to new data.
