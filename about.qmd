@@ -2,4 +2,27 @@
 title: "About"
 ---
 
-This is my website! I am a sophomore majoring in Psychology & Statistics at Mount Holyoke College :)
+Hi, my name is Maimoona and this is my website! I am a sophomore majoring in Psychology & Statistics at Mount Holyoke College :)
+
+```{r}
+#| label: fig-plot
+#| include: TRUE
+#| echo: FALSE
+#| eval: TRUE
+#| warning: FALSE
+#| message: TRUE
+#| fig.width: 6
+#| fig.height: 4
+#| fig-align: "center"
+#| fig.cap: "This is me at the Spring Flower Show!"
+
+library(magick)
+library(magrittr)
+
+# save image as ggplot
+plot <- image_read("IMG-9331.PNG") %>% 
+  image_ggplot(interpolate = TRUE)
+
+plot
+```
+
