@@ -53,6 +53,7 @@ cancer_model + geom_smooth(method = "lm", se = FALSE, formula = y ~ poly(x, 2))
 # Model_3: 10 predictors (Y = b0 + b1 X + b2 X^2 + ... + b10 X^10)
 cancer_model + geom_smooth(method = "lm", se = FALSE, formula = y ~ poly(x, 10))
 ```
+
 The models above demonstrate that the more predictors are added, the more the models become overfit to the noise in our data. The models then lose their ability to generalize to new data.
 
 Explain how you divided your data into its test set and training set.
@@ -118,8 +119,7 @@ model_10_train %>%
 
 State which error metric you are using (MAE or MSE) and give its formal mathematical definition. Why did you choose this error metric? What are the advantages/disadvantages of using it?
 
-We are using MAE, because it provides a fair and interpretable measure of error without disproportionately punishing large outliers, which makes it suitable for medical datasets such as this one, for breast cancer tumors. 
-MAE = (1/n) Σ(i=1 to n) |y_i – ŷ_i|
+We are using MAE, because it provides a fair and interpretable measure of error without disproportionately punishing large outliers, which makes it suitable for medical datasets such as this one, for breast cancer tumors. MAE = (1/n) Σ(i=1 to n) \|y_i – ŷ_i\|
 
 Implement k-fold cross validation for k = 10.
 
@@ -143,8 +143,6 @@ cancer_model_cv %>% unnest(.metrics) %>%
 filter(.metric == "mae")
 ```
 
-Based on my random folds above, the prediction error (MAE) was best for fold 10 and worst for fold 5. On average, the MAE is 12.758
-
 ```{r}
 # 10-fold cross-validation for model_1
 set.seed(244)
@@ -161,7 +159,7 @@ model_1_cv <- lm_spec %>%
 set.seed(253)
 model_2_cv <- lm_spec %>% 
   fit_resamples(
-    perimeter_mean ~ texture_mean * concavity_mean + smoothness_mean,
+    perimeter_mean ~ texture_mean + concavity_mean,
     resamples = vfold_cv(breastcancer, v = 10), 
     metrics = metric_set(mae, rsq)
   )
@@ -182,9 +180,6 @@ model_1 <- lm_spec %>%
   fit(perimeter_mean ~ texture_mean + concavity_mean + smoothness_mean, data = breastcancer)
 
 model_2 <- lm_spec %>% 
-  fit(perimeter_mean ~ texture_mean * concavity_mean + smoothness_mean, data = breastcancer)
-
-model_3 <- lm_spec %>% 
   fit(perimeter_mean ~ texture_mean + concavity_mean, data=breastcancer)
 ```
 
@@ -194,8 +189,6 @@ model_1 %>% glance()
 
 # IN-SAMPLE R^2 for model_2 = ???
 model_2 %>% glance()
-
-model_3 %>% glance()
 ```
 
 ```{r}
@@ -226,6 +219,19 @@ model_1_loocv %>% collect_metrics
 ```
 
 ```{r}
+model_2_loocv <- lm_spec %>% 
+  fit_resamples(
+    perimeter_mean ~ texture_mean + concavity_mean,
+    resamples = vfold_cv(breastcancer, v = 40), 
+    metrics = metric_set(mae)
+  )
+```
+
+```{r}
+model_2_loocv %>% collect_metrics
+```
+
+```{r}
 # 5-fold cross-validation for model_1
 set.seed(244)
 
@@ -246,8 +252,6 @@ cancer_model_cv %>% unnest(.metrics) %>%
 filter(.metric == "mae")
 ```
 
-Based on my random folds above, the prediction error (MAE) was best for fold 4 and worst for fold 3.
-
 ```{r}
 # 5-fold cross-validation for model_1
 set.seed(244)
@@ -264,30 +268,16 @@ model_1_cv <- lm_spec %>%
 set.seed(253)
 model_2_cv <- lm_spec %>% 
   fit_resamples(
-    perimeter_mean ~ texture_mean * concavity_mean + smoothness_mean,
-    resamples = vfold_cv(breastcancer, v = 5), 
-    metrics = metric_set(mae, rsq)
-  )
-```
-
-```{r}
-# 5-fold cross-validation for model_3
-set.seed(253)
-model_3_cv <- lm_spec %>% 
-  fit_resamples(
     perimeter_mean ~ texture_mean + concavity_mean,
     resamples = vfold_cv(breastcancer, v = 5), 
     metrics = metric_set(mae, rsq)
   )
 ```
 
-
 ```{r}
 model_1_cv %>% 
   collect_metrics()
 model_2_cv %>% 
-  collect_metrics()
-model_3_cv %>% 
   collect_metrics()
 ```
 
@@ -312,8 +302,6 @@ cancer_model_cv %>% unnest(.metrics) %>%
 filter(.metric == "mae")
 ```
 
-Based on my random folds above, the prediction error (MAE) was best for fold 2 and worst for fold 1.
-
 ```{r}
 # 8-fold cross-validation for model_1
 set.seed(244)
@@ -326,11 +314,11 @@ model_1_cv <- lm_spec %>%
 ```
 
 ```{r}
-# 8-fold cross-validation for model_2
+# 8-fold cross-validation for model_3
 set.seed(244)
 model_2_cv <- lm_spec %>% 
   fit_resamples(
-    perimeter_mean ~ texture_mean * concavity_mean + smoothness_mean,
+    perimeter_mean ~ texture_mean + concavity_mean,
     resamples = vfold_cv(breastcancer, v = 8), 
     metrics = metric_set(mae, rsq)
   )
@@ -343,8 +331,13 @@ model_2_cv %>%
   collect_metrics()
 ```
 
-The CV errors seem to be fairly consistent between 10-fold, 5-fold, 8-fold and LOOCV. Although a slim difference, the 10-fold cross-validation measure provides the smallest CV error. 
+| Model | In-sample MAE | 10-fold CV MAE | LOOCV MAE | 5-fold CV MAE | 8-fold CV MAE |
+|-------|---------------|----------------|-----------|---------------|---------------|
+| 1     | 11.8729       | 11.9542812     | 11.95863  | 11.9937511    | 11.9305124    |
+| 2     | 12.65028      | 12.7211409     | 12.73318  | 12.7598652    | 12.7120443    |
+
+The CV errors seem to be fairly consistent between 10-fold, 5-fold, 8-fold and LOOCV. Although a slim difference, the 8-fold cross-validation measure provides the smallest CV error for both models.
 
 Select your final model based on which one has the smallest CV error.
 
-For model_1, it looks like the MAE is roughly similar for when it’s measured in-sample (11.82) versus when it’s tested on “new” data (each test fold held out) (11.887 for 10-fold, 11.92 for 5-fold and LOOCV, and 11.875 for 8-fold CV). Model_2 also has roughly similar MAE for in-sample (11.801) versus CV data (11.93 for 10-fold, 12.01 for 5-fold, and 11.901 for 8-fold CV). Althought the difference is small, it seems better to pick the first model.
+For Model 1, it looks like the MAE is roughly similar for when it’s measured in-sample (11.82) versus when it’s tested on “new” data (each test fold held out). Model 2 also has roughly similar MAE for in-sample (12.605) versus CV data. It seems better to pick the first model.

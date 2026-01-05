@@ -2,29 +2,9 @@
 title: "About"
 ---
 
-Hi, my name is Maimoona and this is my website! I am a sophomore majoring in Psychology & Statistics at Mount Holyoke College :) 
+I am deeply curious about how neural mechanisms support complex cognitive processes such as knowledge and language acquisition, numerical perception, logical reasoning, and memory, particularly from a developmental perspective. 
+
+I aim to explore questions related to how learning disabilities affect these processes and how early identification and intervention can promote more equitable learning outcomes in diverse populations. Through my research, I hope to inform policymakers and improve educational programs to support children’s learning, while addressing their complex developmental needs.
 
 Here is a link to my LinkedIn, where you can get in touch with me! https://www.linkedin.com/in/maimoona-abdaal-693269318/
-
-```{r}
-#| label: fig-plot
-#| include: TRUE
-#| echo: FALSE
-#| eval: TRUE
-#| warning: FALSE
-#| message: TRUE
-#| fig.width: 6
-#| fig.height: 4
-#| fig-align: "center"
-#| fig.cap: "This is me at the Spring Flower Show!"
-
-library(magick)
-library(magrittr)
-
-# save image as ggplot
-plot <- image_read("IMG-9331.PNG") %>% 
-  image_ggplot(interpolate = TRUE)
-
-plot
-```
 
