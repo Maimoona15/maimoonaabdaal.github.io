@@ -2,7 +2,7 @@
 title: "Hi, I'm Maimoona!"
 ---
 
-I am a junior at Mount Holyoke College, majoring in Psychology & Statistics with a certificate in Cognitive Neuroscience :)
+I am a junior at Mount Holyoke College, majoring in Psychology & Statistics with a certificate in Cognitive Neuroscience! :)
 
 ```{r}
 #| label: fig-plot
