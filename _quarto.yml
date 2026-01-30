@@ -11,6 +11,8 @@ website:
       - about.qmd
       - href: STAT 244-SC.qmd
         text: STAT 244-SC
+      - href: teaching.qmd
+        text: Teaching Experience
         
 format: 
   html: 
